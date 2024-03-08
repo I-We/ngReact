@@ -181,63 +181,6 @@
     return customWatchDepth || defaultWatch;
   }
 
-  // # reactComponent
-  // Directive that allows React components to be used in Angular templates.
-  //
-  // Usage:
-  //     <react-component name="Hello" props="name"/>
-  //
-  // This requires that there exists an injectable or globally available 'Hello' React component.
-  // The 'props' attribute is optional and is passed to the component.
-  //
-  // The following would would create and register the component:
-  //
-  //     var module = angular.module('ace.react.components');
-  //     module.value('Hello', React.createClass({
-  //         render: function() {
-  //             return <div>Hello {this.props.name}</div>;
-  //         }
-  //     }));
-  //
-  var reactComponent = function ($injector) {
-    return {
-      restrict: 'E',
-      replace: true,
-      link: function (scope, elem, attrs) {
-        var reactComponent = getReactComponent(attrs.name, $injector);
-        var rootElement = reactDOMClient.createRoot(elem[0]);
-
-        var renderMyComponent = function () {
-          var scopeProps = scope.$eval(attrs.props);
-          var props = applyFunctions(scopeProps, scope);
-          var reactElement = React.createElement(reactComponent, props);
-          renderComponent(scope, reactElement, rootElement);
-        };
-
-        // If there are props, re-render when they change
-        attrs.props
-          ? watchProps(
-              attrs.watchDepth,
-              scope,
-              [attrs.props],
-              renderMyComponent
-            )
-          : renderMyComponent();
-
-        // cleanup when scope is destroyed
-        scope.$on('$destroy', function () {
-          if (!attrs.onScopeDestroy) {
-            rootElement.unmount();
-          } else {
-            scope.$eval(attrs.onScopeDestroy, {
-              unmountComponent: rootElement.unmount(),
-            });
-          }
-        });
-      },
-    };
-  };
-
   // # reactDirective
   // Factory function to create directives for React components.
   //
@@ -336,6 +279,5 @@
   // create the end module without any dependencies, including reactComponent and reactDirective
   return angular
     .module('react', [])
-    .directive('reactComponent', ['$injector', reactComponent])
     .factory('reactDirective', ['$injector', reactDirective]);
 });

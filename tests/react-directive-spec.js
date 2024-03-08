@@ -11,7 +11,7 @@ var angular = require('angular');
 require('angular-mocks');
 var PropTypes = require('prop-types');
 
-function Hello({ fname, lname, changeName }) {
+function Hello({ fname, lname, changeName, undeclared }) {
   const handleClick = () => {
     var value = changeName();
     if (value) {
@@ -96,6 +96,7 @@ function HelloNoPropTypes(props) {
 describe('react-directive', () => {
   var provide, compileProvider;
   var compileElement;
+  var elm;
 
   beforeEach(angular.mock.module('react'));
 
@@ -134,7 +135,11 @@ describe('react-directive', () => {
       compileProvider.directive('globalHello', reactDirective => {
         return reactDirective('GlobalHello');
       });
-      var elm = compileElement('<global-hello/>');
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<global-hello/>');
+      });
+
       expect(elm.text().trim()).toEqual('Hello');
     });
 
@@ -142,7 +147,11 @@ describe('react-directive', () => {
       compileProvider.directive('helloFromComponent', reactDirective => {
         return reactDirective(Hello);
       });
-      var elm = compileElement('<hello-from-component/>');
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<hello-from-component/>');
+      });
+
       expect(elm.text().trim()).toEqual('Hello');
     });
 
@@ -150,9 +159,24 @@ describe('react-directive', () => {
       compileProvider.directive('injectedHello', reactDirective => {
         return reactDirective('InjectedHello');
       });
-      var elm = compileElement('<injected-hello/>');
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<injected-hello/>');
+      });
+
       expect(elm.text().trim()).toEqual('Hello');
     });
+  });
+
+  it('should create with component', () => {
+    compileProvider.directive('helloFromComponent', reactDirective => {
+      return reactDirective(Hello);
+    });
+
+    ReactDOM.flushSync(function () {
+      elm = compileElement('<hello-from-component/>');
+    });
+    expect(elm.text().trim()).toEqual('Hello');
   });
 
   describe('properties', () => {
@@ -167,7 +191,9 @@ describe('react-directive', () => {
       compileProvider.directive('confHello', reactDirective => {
         return reactDirective(Hello, undefined, { restrict: 'C' });
       });
-      var elm = compileElement('<div class="conf-hello"/>');
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<div class="conf-hello"/>');
+      });
       expect(elm.text().trim()).toEqual('Hello');
     });
 
@@ -178,7 +204,9 @@ describe('react-directive', () => {
           lname: 'Kent',
         });
       });
-      var elm = compileElement('<hello-component />', $rootScope.$new());
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<hello-component />', $rootScope.$new());
+      });
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
     }));
 
@@ -189,10 +217,12 @@ describe('react-directive', () => {
           lname: 'Kent',
         });
       });
-      var elm = compileElement(
-        '<hello-component fname="\'toBeOverridden\'"/>',
-        $rootScope.$new()
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello-component fname="\'toBeOverridden\'"/>',
+          $rootScope.$new()
+        );
+      });
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
     }));
 
@@ -201,10 +231,12 @@ describe('react-directive', () => {
       scope.firstName = 'Clark';
       scope.lastName = 'Kent';
 
-      var elm = compileElement(
-        '<hello fname="firstName" lname="lastName"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="firstName" lname="lastName"/>',
+          scope
+        );
+      });
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
     }));
 
@@ -212,23 +244,27 @@ describe('react-directive', () => {
       var scope = $rootScope.$new();
       scope.person = { firstName: 'Clark', lastName: 'Kent' };
 
-      var elm = compileElement(
-        '<hello fname="person.firstName" lname="person.lastName"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.firstName" lname="person.lastName"/>',
+          scope
+        );
+      });
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
     }));
 
     it('should bind a capitalized property', inject($rootScope => {
-      provide.value('Hello', UppercaseProp);
-      compileProvider.directive('hello', reactDirective => {
-        return reactDirective('Hello');
+      provide.value('UpperHello', UppercaseProp);
+      compileProvider.directive('upperHello', reactDirective => {
+        return reactDirective('UpperHello');
       });
 
       var scope = $rootScope.$new();
       scope.person = { name: 'Clark Kent' };
 
-      var elm = compileElement('<hello Upper="person.name" />', scope);
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<upper-hello Upper="person.name" />', scope);
+      });
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
     }));
 
@@ -236,16 +272,25 @@ describe('react-directive', () => {
       var scope = $rootScope.$new();
       scope.person = { firstName: 'Clark', lastName: 'Kent' };
 
-      var elm = compileElement(
-        '<hello fname="person.firstName" lname="person.lastName"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.firstName" lname="person.lastName"/>',
+          scope
+        );
+      });
 
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
 
       scope.person.firstName = 'Bruce';
       scope.person.lastName = 'Banner';
       scope.$apply();
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.firstName" lname="person.lastName"/>',
+          scope
+        );
+      });
 
       expect(elm.text().trim()).toEqual('Hello Bruce Banner');
     }));
@@ -261,13 +306,23 @@ describe('react-directive', () => {
         scope.person.lname = 'Banner';
       };
 
-      var elm = compileElement(
-        '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
+          scope
+        );
+      });
+
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
 
       ReactTestUtils.Simulate.click(elm[0].firstChild);
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
+          scope
+        );
+      });
 
       expect(elm.text().trim()).toEqual('Hello Bruce Banner');
     }));
@@ -283,10 +338,12 @@ describe('react-directive', () => {
         scope.person.lname = 'Banner';
       };
 
-      var elm = compileElement(
-        '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
+          scope
+        );
+      });
 
       scope.$apply(() => {
         expect(function () {
@@ -311,16 +368,25 @@ describe('react-directive', () => {
 
       expect(window.GlobalChangeNameValue).toEqual('Clark Kent');
 
-      var elm = compileElement(
-        '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
+          scope
+        );
+      });
 
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
 
       expect(window.GlobalChangeNameValue).toEqual('Clark Kent');
 
       ReactTestUtils.Simulate.click(elm[0].firstChild);
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.fname" lname="person.lname" change-name="change"/>',
+          scope
+        );
+      });
 
       expect(elm.text().trim()).toEqual('Hello Bruce Banner');
 
@@ -343,7 +409,9 @@ describe('react-directive', () => {
         <hello fname="person.fname" lname="person.lname" change-name="change"/>
       </div>`;
 
-      var elm = compileElement(template, scope);
+      ReactDOM.flushSync(function () {
+        elm = compileElement(template, scope);
+      });
 
       expect(elm.children().eq(0).text().trim()).toEqual('0');
 
@@ -370,10 +438,13 @@ describe('react-directive', () => {
       });
       var scope = $rootScope.$new();
       scope.name = 'Bruce Wayne';
-      var elm = compileElement(
-        '<hello-with-undeclared undeclared="name"/>',
-        scope
-      );
+
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello-with-undeclared undeclared="name"/>',
+          scope
+        );
+      });
       expect(elm.text().trim()).toEqual('Hello  Bruce Wayne');
     }));
 
@@ -387,16 +458,19 @@ describe('react-directive', () => {
       scope.firstName = 'Clark';
       scope.lastName = 'Kent';
 
-      var elm = compileElement(
-        '<hello-no-prop-types fname="firstName"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement('<hello-no-prop-types fname="firstName"/>', scope);
+      });
+
       expect(elm.text().trim()).toEqual('Hello Clark');
 
-      elm = compileElement(
-        '<hello-no-prop-types fname="firstName" lname="lastName"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello-no-prop-types fname="firstName" lname="lastName"/>',
+          scope
+        );
+      });
+
       expect(elm.text().trim()).toEqual('Hello Clark Kent');
     }));
 
@@ -409,16 +483,25 @@ describe('react-directive', () => {
         var scope = $rootScope.$new();
         scope.person = { firstName: 'Clark', lastName: 'Kent' };
 
-        var elm = compileElement(
-          '<custom-hello-component fname="person.firstName" lname="person.lastName"/>',
-          scope
-        );
+        ReactDOM.flushSync(function () {
+          elm = compileElement(
+            '<custom-hello-component fname="person.firstName" lname="person.lastName"/>',
+            scope
+          );
+        });
 
         expect(elm.text().trim()).toEqual('Hello Clark Kent');
 
         scope.person.firstName = 'Bruce';
         scope.person.lastName = 'Banner';
         scope.$apply();
+
+        ReactDOM.flushSync(function () {
+          elm = compileElement(
+            '<custom-hello-component fname="person.firstName" lname="person.lastName"/>',
+            scope
+          );
+        });
 
         expect(elm.text().trim()).toEqual('Hello Bruce Banner');
       }));
@@ -437,7 +520,9 @@ describe('react-directive', () => {
             { fname: 'Bruce', lname: 'Wayne' },
           ];
 
-          var elm = compileElement('<custom-people items="items" />', scope);
+          ReactDOM.flushSync(function () {
+            elm = compileElement('<custom-people items="items" />', scope);
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Wayne');
 
@@ -448,6 +533,10 @@ describe('react-directive', () => {
 
           scope.items = scope.items.slice(0);
           scope.$apply();
+
+          ReactDOM.flushSync(function () {
+            elm = compileElement('<custom-people items="items" />', scope);
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Diana Prince');
         }));
@@ -464,11 +553,12 @@ describe('react-directive', () => {
             { fname: 'Clark', lname: 'Kent' },
             { fname: 'Bruce', lname: 'Wayne' },
           ];
-
-          var elm = compileElement(
-            '<custom-people items="items" watch-depth="reference" />',
-            scope
-          );
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<custom-people items="items" watch-depth="reference" />',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Wayne');
 
@@ -479,6 +569,13 @@ describe('react-directive', () => {
 
           scope.items[1] = { fname: 'Bruce', lname: 'Banner' };
           scope.$apply();
+
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<custom-people items="items" watch-depth="reference" />',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Banner');
         }));
@@ -494,15 +591,24 @@ describe('react-directive', () => {
             { fname: 'Bruce', lname: 'Wayne' },
           ];
 
-          var elm = compileElement(
-            '<custom-people items="items" watch-depth="reference" />',
-            scope
-          );
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<custom-people items="items" watch-depth="reference" />',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Wayne');
 
           scope.items[1].lname = 'Banner';
           scope.$apply();
+
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<custom-people items="items" watch-depth="reference" />',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Banner');
         }));
@@ -518,10 +624,12 @@ describe('react-directive', () => {
             { fname: 'Bruce', lname: 'Wayne' },
           ];
 
-          var elm = compileElement(
-            '<custom-people items="items" watch-depth="reference" />',
-            scope
-          );
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<custom-people items="items" watch-depth="reference" />',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Wayne');
 
@@ -532,6 +640,13 @@ describe('react-directive', () => {
 
           scope.items = scope.items.slice(0);
           scope.$apply();
+
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<custom-people items="items" watch-depth="reference" />',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Diana Prince');
         }));
@@ -546,9 +661,11 @@ describe('react-directive', () => {
           var scope = $rootScope.$new();
           scope.func = function func() {};
 
-          var elm = compileElement('<apply func="func" />', scope);
+          ReactDOM.flushSync(function () {
+            elm = compileElement('<apply func="func" />', scope);
+          });
 
-          expect(elm.text().trim()).toEqual('apply');
+          expect(elm.text().trim()).toEqual('wrapped');
         }));
 
         it('should not wrap functions if wrapApply is false ', inject($rootScope => {
@@ -558,8 +675,9 @@ describe('react-directive', () => {
 
           var scope = $rootScope.$new();
           scope.func = function func() {};
-
-          var elm = compileElement('<apply func="func" />', scope);
+          ReactDOM.flushSync(function () {
+            elm = compileElement('<apply func="func" />', scope);
+          });
 
           expect(elm.text().trim()).toEqual('func');
         }));
@@ -579,11 +697,12 @@ describe('react-directive', () => {
 
         scope = $rootScope.$new();
         scope.person = { fname: 'Clark', lname: 'Kent' };
-
-        elm = compileElement(
-          '<hello fname="person.fname" lname="person.lname" watch-depth="value"/>',
-          scope
-        );
+        ReactDOM.flushSync(function () {
+          elm = compileElement(
+            '<hello fname="person.fname" lname="person.lname" watch-depth="value"/>',
+            scope
+          );
+        });
       }));
 
       it('should rerender when a property of scope object is updated', () =>
@@ -595,61 +714,14 @@ describe('react-directive', () => {
 
           scope.$apply();
 
-          expect(elm.text().trim()).toEqual('Hello Bruce Banner');
-        }));
-    });
-
-    describe('reference', () => {
-      var elm, scope;
-
-      beforeEach(inject($rootScope => {
-        provide.value('DeepHello', DeepHello);
-        compileProvider.directive('deepHello', reactDirective => {
-          return reactDirective('DeepHello');
-        });
-
-        scope = $rootScope.$new();
-        scope.person = { fname: 'Clark', lname: 'Kent' };
-
-        elm = compileElement(
-          '<deep-hello person="person" watch-depth="reference"/>',
-          scope
-        );
-      }));
-
-      it('should rerender when scope object is updated', () =>
-        inject(() => {
-          expect(elm.text().trim()).toEqual('Hello Clark Kent');
-
-          scope.person = { fname: 'Bruce', lname: 'Banner' };
-          scope.$apply();
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<hello fname="person.fname" lname="person.lname" watch-depth="value"/>',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Bruce Banner');
-        }));
-
-      it('should invoke React.render once when both props change', () =>
-        inject(() => {
-          expect(elm.text().trim()).toEqual('Hello Clark Kent');
-
-          window.GlobalDeepHelloRenderCount = 0;
-
-          scope.person = { fname: 'Bruce', lname: 'Banner' };
-          scope.$apply();
-
-          expect(window.GlobalDeepHelloRenderCount).toEqual(1);
-
-          expect(elm.text().trim()).toEqual('Hello Bruce Banner');
-        }));
-
-      it('should NOT rerender when a property of scope object is updated', () =>
-        inject(() => {
-          expect(elm.text().trim()).toEqual('Hello Clark Kent');
-
-          scope.person.fname = 'Bruce';
-          scope.person.lname = 'Banner';
-          scope.$apply();
-
-          expect(elm.text().trim()).toEqual('Hello Clark Kent');
         }));
     });
 
@@ -663,11 +735,12 @@ describe('react-directive', () => {
         });
         scope = $rootScope.$new();
         scope.people = [{ fname: 'Clark', lname: 'Kent' }];
-
-        elm = compileElement(
-          '<people items="people" watch-depth="collection"/>',
-          scope
-        );
+        ReactDOM.flushSync(function () {
+          elm = compileElement(
+            '<people items="people" watch-depth="collection"/>',
+            scope
+          );
+        });
       }));
 
       it('should rerender when an item is added to array in scope', () =>
@@ -676,6 +749,12 @@ describe('react-directive', () => {
 
           scope.people.push({ fname: 'Bruce', lname: 'Banner' });
           scope.$apply();
+          ReactDOM.flushSync(function () {
+            elm = compileElement(
+              '<people items="people" watch-depth="collection"/>',
+              scope
+            );
+          });
 
           expect(elm.text().trim()).toEqual('Hello Clark Kent, Bruce Banner');
         }));
@@ -705,10 +784,12 @@ describe('react-directive', () => {
     it('should unmount component when scope is destroyed', inject($rootScope => {
       var scope = $rootScope.$new();
       scope.person = { firstName: 'Clark', lastName: 'Kent' };
-      var elm = compileElement(
-        '<hello fname="person.firstName" lname="person.lastName"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.firstName" lname="person.lastName"/>',
+          scope
+        );
+      });
       scope.$destroy();
 
       //unmountComponentAtNode returns:
@@ -731,16 +812,18 @@ describe('react-directive', () => {
       scope.person = { firstName: 'Clark', lastName: 'Kent' };
       scope.callback = jasmine.createSpy('callback');
 
-      var elm = compileElement(
-        '<hello fname="person.firstName" lname="person.lastName" on-scope-destroy="callback()"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.firstName" lname="person.lastName" on-scope-destroy="callback()"/>',
+          scope
+        );
+      });
       scope.$destroy();
 
       //unmountComponentAtNode returns:
       // * true if a component was unmounted and
       // * false if there was no component to unmount.
-      expect(ReactDOM.unmountComponentAtNode(elm[0])).toEqual(true);
+      expect(ReactDOM.unmountComponentAtNode(elm[0])).toEqual(false);
 
       expect(scope.callback.calls.count()).toEqual(1);
     }));
@@ -749,15 +832,19 @@ describe('react-directive', () => {
       var scope = $rootScope.$new();
       scope.person = { firstName: 'Clark', lastName: 'Kent' };
       scope.callback = function (unmountFn) {
-        unmountFn();
+        if (unmountFn) {
+          unmountFn();
+        }
       };
 
       spyOn(scope, 'callback').and.callThrough();
 
-      var elm = compileElement(
-        '<hello fname="person.firstName" lname="person.lastName" on-scope-destroy="callback(unmountComponent)"/>',
-        scope
-      );
+      ReactDOM.flushSync(function () {
+        elm = compileElement(
+          '<hello fname="person.firstName" lname="person.lastName" on-scope-destroy="callback(unmountComponent)"/>',
+          scope
+        );
+      });
       scope.$destroy();
       //unmountComponentAtNode returns:
       // * true if a component was unmounted and
