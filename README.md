@@ -2,7 +2,6 @@
 
 > **Note: For a more modern alternative to ngReact, we recommend [react2angular](https://github.com/coatue/react2angular), [angular2react](https://github.com/coatue/angular2react), and [ngimport](https://github.com/bcherny/ngimport).**
 
-
 > **Note: This library is a fork of the original ngReact project, specifically updated to incorporate React 18's new createRoot API. This update facilitates the seamless integration of React 18 components within AngularJS applications, allowing developers to leverage the latest features and performance enhancements offered by React 18. We welcome contributions and feedback from the community to continue improving this project.**
 
 # ngReact
@@ -24,13 +23,13 @@ Motivation for this could be any of the following:
 Install via npm:
 
 ```bash
-npm install @pakenfit/ngreact-18
+npm install @iwe/ngreact
 ```
 
 or via yarn:
 
 ```bash
-yarn add @pakenfit/ngreact-18
+yarn add @iwe/ngreact
 ```
 
 # Usage
@@ -41,14 +40,14 @@ Then, just make sure Angular, React, and ngReact are on the page,
 <script src="node_modules/angular/angular.js"></script>
 <script src="node_modules/react/react.js"></script>
 <script src="node_modules/react/react-dom.js"></script>
-<script src="node_modules/@pakenfit/ngreact-18/ngReact.min.js"></script>
+<script src="node_modules/@iwe/ngreact/ngReact.min.js"></script>
 ```
 
 and include the 'react' Angular module as a dependency for your new app
 
 ```html
 <script>
-    angular.module('app', ['react']);
+  angular.module('app', ['react']);
 </script>
 ```
 
@@ -72,7 +71,7 @@ With an Angular app and controller declaration like this:
 ```javascript
 angular
   .module('app', ['react'])
-  .controller('helloController', function($scope) {
+  .controller('helloController', function ($scope) {
     $scope.person = { fname: 'Clark', lname: 'Kent' };
   });
 ```
@@ -83,15 +82,15 @@ And a React Component like this
 var HelloComponent = React.createClass({
   propTypes: {
     fname: React.PropTypes.string.isRequired,
-    lname: React.PropTypes.string.isRequired
+    lname: React.PropTypes.string.isRequired,
   },
-  render: function() {
+  render: function () {
     return (
       <span>
         Hello {this.props.fname} {this.props.lname}
       </span>
     );
-  }
+  },
 });
 app.value('HelloComponent', HelloComponent);
 ```
@@ -101,7 +100,11 @@ The component can be used in an Angular view using the react-component directive
 ```html
 <body ng-app="app">
   <div ng-controller="helloController">
-    <react-component name="HelloComponent" props="person" watch-depth="reference"/>
+    <react-component
+      name="HelloComponent"
+      props="person"
+      watch-depth="reference"
+    />
   </div>
 </body>
 ```
@@ -121,7 +124,7 @@ If, for example, you wanted to use the same React component in multiple places, 
 The service takes the React component as the argument.
 
 ```javascript
-app.directive('helloComponent', function(reactDirective) {
+app.directive('helloComponent', function (reactDirective) {
   return reactDirective(HelloComponent);
 });
 ```
@@ -129,7 +132,7 @@ app.directive('helloComponent', function(reactDirective) {
 Alternatively you can provide the name of the component
 
 ```javascript
-app.directive('helloComponent', function(reactDirective) {
+app.directive('helloComponent', function (reactDirective) {
   return reactDirective('HelloComponent');
 });
 ```
@@ -139,7 +142,11 @@ This creates a directive that can be used like this:
 ```html
 <body ng-app="app">
   <div ng-controller="helloController">
-    <hello-component fname="person.fname" lname="person.lname" watch-depth="reference"></hello-component>
+    <hello-component
+      fname="person.fname"
+      lname="person.lname"
+      watch-depth="reference"
+    ></hello-component>
   </div>
 </body>
 ```
@@ -147,7 +154,7 @@ This creates a directive that can be used like this:
 The `reactDirective` service will read the React component `propTypes` and watch attributes with these names. If your react component doesn't have `propTypes` defined you can pass in an array of attribute names to watch. If you don't pass any array of attribute names, fall back to use directive attributes as a last resort. By default, attributes will be watched by value however you can also choose to watch by reference or collection by supplying the watch-depth attribute. Possible values are `reference`, `collection` and `value` (default).
 
 ```javascript
-app.directive('hello', function(reactDirective) {
+app.directive('hello', function (reactDirective) {
   return reactDirective(HelloComponent, ['fname', 'lname']);
 });
 ```
@@ -155,12 +162,12 @@ app.directive('hello', function(reactDirective) {
 You may also customize the watch depth per prop/attribute by wrapping the name and an options object in an array inside the props array:
 
 ```javascript
-app.directive('hello', function(reactDirective) {
+app.directive('hello', function (reactDirective) {
   return reactDirective(HelloComponent, [
     'person', // takes on the watch-depth of the entire directive
     ['place', { watchDepth: 'reference' }],
     ['things', { watchDepth: 'collection' }],
-    ['ideas', { watchDepth: 'value' }]
+    ['ideas', { watchDepth: 'value' }],
   ]);
 });
 ```
@@ -168,11 +175,11 @@ app.directive('hello', function(reactDirective) {
 By default, ngReact will wrap any functions you pass as in `scope.$apply`. You may want to override this behavior, for instance, if you are passing a React component as a prop. You can achieve this by explicitly adding a `wrapApply: false` in the prop config:
 
 ```javascript
-app.directive('hello', function(reactDirective) {
+app.directive('hello', function (reactDirective) {
   return reactDirective(HelloComponent, [
     'person',
     ['place', { watchDepth: 'reference' }],
-    ['func', { watchDepth: 'reference', wrapApply: false }]
+    ['func', { watchDepth: 'reference', wrapApply: false }],
   ]);
 });
 ```
@@ -180,7 +187,7 @@ app.directive('hello', function(reactDirective) {
 If you want to change the configuration of the directive created the `reactDirective` service, e.g. change `restrict: 'E'` to `restrict: 'C'`, you can do so by passing in an object literal with the desired configuration.
 
 ```javascript
-app.directive('hello', function(reactDirective) {
+app.directive('hello', function (reactDirective) {
   return reactDirective(HelloComponent, undefined, { restrict: 'C' });
 });
 ```
@@ -196,7 +203,7 @@ Unknown provider: eProvider <- e <- helloDirective
 To fix it add explicit annotation of dependency
 
 ```javascript
-var helloDirective = function(reactDirective) {
+var helloDirective = function (reactDirective) {
   return reactDirective('HelloComponent');
 };
 helloDirective.$inject = ['reactDirective'];
@@ -210,7 +217,7 @@ In an existing Angular application, you'll often have existing services or filte
 It's also possible to pass Angular injectables and other variables as fourth parameter straight to the reactDirective, which will then attach them to the props
 
 ```javascript
-app.directive('helloComponent', function(reactDirective, $ngRedux) {
+app.directive('helloComponent', function (reactDirective, $ngRedux) {
   return reactDirective(HelloComponent, undefined, {}, { store: $ngRedux });
 });
 ```
@@ -218,8 +225,8 @@ app.directive('helloComponent', function(reactDirective, $ngRedux) {
 Be aware that you can not inject Angular directives into JSX.
 
 ```javascript
-app.filter('hero', function() {
-  return function(person) {
+app.filter('hero', function () {
+  return function (person) {
     if (person.fname === 'Clark' && person.lname === 'Kent') {
       return 'Superman';
     }
@@ -228,14 +235,14 @@ app.filter('hero', function() {
 });
 
 /** @jsx React.DOM */
-app.factory('HelloComponent', function($filter) {
+app.factory('HelloComponent', function ($filter) {
   return React.createClass({
     propTypes: {
-      person: React.PropTypes.object.isRequired
+      person: React.PropTypes.object.isRequired,
     },
-    render: function() {
+    render: function () {
       return <span>Hello $filter('hero')(this.props.person)</span>;
-    }
+    },
   });
 });
 ```
