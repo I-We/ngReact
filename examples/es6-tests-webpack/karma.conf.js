@@ -44,15 +44,16 @@ module.exports = function (karmaConfig) {
       module: {
         loaders: [
           {
-            test: /\.js$/, loader: 'babel-loader',
-            exclude: /node_modules/
-          }
-        ]
-      }
+            test: /\.js$/,
+            loader: 'babel-loader',
+            exclude: /node_modules/,
+          },
+        ],
+      },
     },
 
     webpackServer: {
-      noInfo: true
+      noInfo: true,
     },
 
     reporters: ['dots'],
@@ -65,8 +66,8 @@ module.exports = function (karmaConfig) {
 
     autoWatch: false,
 
-    browsers: ['PhantomJS2'],
+    browsers: ['Chrome'],
 
-    singleRun: config.ci
+    singleRun: config.ci,
   });
 };
