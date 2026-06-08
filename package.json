@@ -29,7 +29,7 @@
     "angular": "global:angular"
   },
   "devDependencies": {
-    "@release-it/conventional-changelog": "^8.0.1",
+    "@release-it/conventional-changelog": "^11.0.1",
     "angular": "^1.8.3",
     "angular-mocks": "^1.8.3",
     "browserify": "13.0.0",
@@ -51,7 +51,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "reactify": "1.1.1",
-    "release-it": "^17.0.3",
+    "release-it": "^20.2.0",
     "watchify": "^3.7.0"
   },
   "engines": {
